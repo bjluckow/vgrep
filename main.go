@@ -183,6 +183,7 @@ func main() {
 		return
 	}
 
+	fmt.Println()
 	for i, line := range result.lines {
 		if result.matches[i] {
 			fmt.Println(line)
