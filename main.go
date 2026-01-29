@@ -137,7 +137,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "enter":
 			return m, tea.Quit
 		case "ctrl+c", "esc":
-			os.Exit(1)
+			m.matches = nil // cancel any output
+			return m, tea.Quit
 		}
 	}
 
@@ -176,6 +177,12 @@ func main() {
 	}
 
 	result := finalModel.(model)
+
+	// user cancelled
+	if result.matches == nil {
+		return
+	}
+
 	for i, line := range result.lines {
 		if result.matches[i] {
 			fmt.Println(line)
