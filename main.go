@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/textinput"
@@ -33,6 +34,8 @@ var matchStyle = lipgloss.NewStyle().
 
 var dimStyle = lipgloss.NewStyle().
 	Foreground(lipgloss.Color("8"))
+
+var gutterStyle = dimStyle
 
 func loadInput() []string {
 	info, _ := os.Stdin.Stat()
@@ -65,7 +68,7 @@ func initialModel(grepArgs []string) model {
 	lines := loadInput()
 
 	ti := textinput.New()
-	ti.Placeholder = "regex"
+	ti.Placeholder = "^[.*]$"
 	ti.Focus()
 
 	vp := viewport.New(0, 0)
@@ -134,6 +137,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.view.Width = msg.Width
 		m.view.Height = msg.Height - 2
 
+		m.input.Width = msg.Width - 10
+
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "enter":
@@ -172,7 +177,15 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	m.applyRegex(m.input.Value())
 
-	content := strings.Join(m.rendered, "\n")
+	var numbered []string
+	width := 1 + len(strconv.Itoa(len(m.lines)))
+	for i, line := range m.rendered {
+		gutter := fmt.Sprintf("%*d | ", width, i+1)
+		gutter = gutterStyle.Render(gutter)
+		numbered = append(numbered, gutter+" "+line)
+	}
+
+	content := strings.Join(numbered, "\n")
 	m.view.SetContent(content)
 
 	return m, cmd
