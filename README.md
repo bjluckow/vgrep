@@ -55,7 +55,7 @@ Press **Esc** or **Ctrl+C** to cancel.
 ## Flags
 
 ```
--d    dual column mode (matched / unmatched split view)
+-d    dual column mode (unmatched / matched split view)
 ```
 
 You can pass raw grep flags after `--`:

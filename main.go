@@ -191,7 +191,7 @@ type flags struct {
 func parseFlags(vgrepFlags []string) *flags {
 	var result flags
 	fs := flag.NewFlagSet("vgrep", flag.ExitOnError)
-	fs.BoolVar(&result.dualMode, "d", false, "dual column mode")
+	fs.BoolVar(&result.dualMode, "d", false, "dual column mode (unmatched | matched)")
 
 	fs.Parse(vgrepFlags)
 	return &result
