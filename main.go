@@ -17,6 +17,7 @@ import (
 type model struct {
 	lines      []string
 	matches    []bool
+	grepArgs   []string
 	rendered   []string
 	input      textinput.Model
 	view       viewport.Model
@@ -60,7 +61,7 @@ func loadInput() []string {
 	return lines
 }
 
-func initialModel() model {
+func initialModel(grepArgs []string) model {
 	lines := loadInput()
 
 	ti := textinput.New()
@@ -70,10 +71,11 @@ func initialModel() model {
 	vp := viewport.New(0, 0)
 
 	m := model{
-		lines:   lines,
-		matches: make([]bool, len(lines)),
-		input:   ti,
-		view:    vp,
+		lines:    lines,
+		matches:  make([]bool, len(lines)),
+		grepArgs: grepArgs,
+		input:    ti,
+		view:     vp,
 	}
 
 	m.applyRegex("")
@@ -139,6 +141,29 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c", "esc":
 			m.matches = nil // cancel any output
 			return m, tea.Quit
+		case "up":
+			m.view.ScrollUp(1)
+			return m, nil
+
+		case "down":
+			m.view.ScrollDown(1)
+			return m, nil
+
+		case "pgup":
+			m.view.HalfPageUp()
+			return m, nil
+
+		case "pgdown":
+			m.view.HalfPageDown()
+			return m, nil
+
+		case "home":
+			m.view.GotoTop()
+			return m, nil
+
+		case "end":
+			m.view.GotoBottom()
+			return m, nil
 		}
 	}
 
@@ -154,7 +179,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() string {
-	status := fmt.Sprintf("(%d/%d matches)", m.matchCount, len(m.lines))
+	percent := float64(m.matchCount) / float64(len(m.lines)) * 100
+	status := fmt.Sprintf("%6.2f%%", percent)
 
 	if m.regexErr != nil {
 		status = fmt.Sprintf("regex error: %v", m.regexErr)
@@ -167,8 +193,19 @@ func (m model) View() string {
 	return m.view.View() + "\n" + statusLine + " " + m.input.View()
 }
 
+func splitArgs() ([]string, []string) {
+	args := os.Args[1:]
+	for i, a := range args {
+		if a == "--" {
+			return args[:i], args[i+1:]
+		}
+	}
+	return args, nil
+}
+
 func main() {
-	m := initialModel()
+	_, grepArgs := splitArgs()
+	m := initialModel(grepArgs)
 	p := tea.NewProgram(m, tea.WithAltScreen())
 
 	finalModel, err := p.Run()
