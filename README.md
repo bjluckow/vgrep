@@ -1,10 +1,13 @@
 # `vgrep`: Visual Global Regex Print
 
+View [regular expression](https://en.wikipedia.org/wiki/Regular_expression) matches in real time in your command line. Powered by [grep](https://en.wikipedia.org/wiki/Grep)
 ![demo](demo.png)
 
 ---
 
 ## Installation
+
+Note that `vgrep` **assumes and depends on** a local `grep` installation.
 
 ### Option 1 — Go install
 
@@ -32,6 +35,8 @@ mv vgrep ~/.local/bin/
 
 ## Usage
 
+`vgrep` reads from stdin for Unix-style composability.
+
 Pipe input:
 
 ```bash
@@ -44,37 +49,20 @@ Or pass a file:
 vgrep file.txt
 ```
 
-Type a regex. Matches update live.
+Then, type a regular expression to match lines as per `grep`.
 
-Press **Enter** to emit matching lines to stdout.
+Press **Enter** to emit results to stdout.
 
 Press **Esc** or **Ctrl+C** to cancel.
 
 ---
 
-## Flags
+Run `vgrep --help` to view native flags.
 
-```
--d    dual column mode (unmatched / matched split view)
-```
-
-You can pass raw grep flags after `--`:
+`vgrep` directly wraps `grep`. You can pass raw flags to `grep` after `--`:
 
 ```bash
 vgrep -d -- -i
 ```
 
 ---
-
-## Controls
-
-```
-↑ ↓      scroll
-PgUp/PgDn
-Home/End
-Enter    commit matches
-Esc      cancel
-```
-
----
-
