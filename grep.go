@@ -9,7 +9,7 @@ import (
 )
 
 // RunGrep executes grep and returns a match map indexed by line number
-func RunGrep(pattern string, grepArgs []string) (map[int]bool, error) {
+func RunGrep(pattern string, grepArgs []string, lines []string) (map[int]bool, error) {
 	matches := make(map[int]bool)
 
 	if pattern == "" {
@@ -20,13 +20,14 @@ func RunGrep(pattern string, grepArgs []string) (map[int]bool, error) {
 	args = append(args, pattern)
 
 	cmd := exec.Command("grep", args...)
+	cmd.Stdin = strings.NewReader(strings.Join(lines, "\n"))
 
 	out, err := cmd.Output()
 
 	// grep returns exit code 1 when no matches found
 	if err != nil {
 		if exitErr, ok := err.(*exec.ExitError); ok {
-			out = exitErr.Stdout
+			out = exitErr.Stderr
 		} else {
 			return nil, err
 		}

@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"regexp"
 	"strconv"
 	"strings"
 
@@ -87,36 +86,60 @@ func initialModel(grepArgs []string) model {
 	return m
 }
 
+//	func (m *model) applyRegex(pattern string) {
+//		if pattern == "" {
+//			m.rendered = m.lines
+//			for i := range m.matches {
+//				m.matches[i] = false
+//			}
+//			m.matchCount = 0
+//			m.regexErr = nil
+//			return
+//		}
+//
+//		re, err := regexp.Compile(pattern)
+//		if err != nil {
+//			m.regexErr = err
+//			return
+//		}
+//
+//		m.matchCount = 0
+//		var out []string
+//
+//		for idx, line := range m.lines {
+//			if re.MatchString(line) {
+//				m.matches[idx] = true
+//				m.matchCount++
+//				highlighted := re.ReplaceAllStringFunc(line, func(s string) string {
+//					return matchStyle.Render(s)
+//				})
+//				out = append(out, highlighted)
+//			} else {
+//				m.matches[idx] = false
+//				out = append(out, dimStyle.Render(line))
+//			}
+//		}
+//
+//		m.rendered = out
+//		m.regexErr = nil
+//	}
 func (m *model) applyRegex(pattern string) {
-	if pattern == "" {
-		m.rendered = m.lines
-		for i := range m.matches {
-			m.matches[i] = false
-		}
-		m.matchCount = 0
-		m.regexErr = nil
-		return
-	}
-
-	re, err := regexp.Compile(pattern)
+	matchMap, err := RunGrep(pattern, m.grepArgs, m.lines)
 	if err != nil {
 		m.regexErr = err
 		return
 	}
 
-	m.matchCount = 0
+	m.matchCount = len(matchMap)
+
 	var out []string
 
-	for idx, line := range m.lines {
-		if re.MatchString(line) {
-			m.matches[idx] = true
-			m.matchCount++
-			highlighted := re.ReplaceAllStringFunc(line, func(s string) string {
-				return matchStyle.Render(s)
-			})
-			out = append(out, highlighted)
+	for i, line := range m.lines {
+		if matchMap[i] {
+			m.matches[i] = true
+			out = append(out, matchStyle.Render(line))
 		} else {
-			m.matches[idx] = false
+			m.matches[i] = false
 			out = append(out, dimStyle.Render(line))
 		}
 	}
