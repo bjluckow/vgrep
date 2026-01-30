@@ -1,6 +1,6 @@
 # `vgrep`: Visual Global Regex Print
 
-View [regular expression](https://en.wikipedia.org/wiki/Regular_expression) matches in real time in your command line. Powered by [grep](https://en.wikipedia.org/wiki/Grep)
+Test [regular expressions](https://en.wikipedia.org/wiki/Regular_expression) in real time. Powered by [grep](https://en.wikipedia.org/wiki/Grep).
 ![demo](demo.png)
 
 ---
@@ -55,7 +55,8 @@ Press **Enter** to emit results to stdout.
 
 Press **Esc** or **Ctrl+C** to cancel.
 
----
+
+### Flags
 
 Run `vgrep --help` to view native flags.
 
