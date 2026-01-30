@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strconv"
-	"strings"
 
 	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/bubbles/viewport"
@@ -28,15 +26,6 @@ type model struct {
 	regexErr   error
 	dualMode   bool
 }
-
-var matchStyle = lipgloss.NewStyle().
-	Background(lipgloss.Color("1")).
-	Foreground(lipgloss.Color("15"))
-
-var dimStyle = lipgloss.NewStyle().
-	Foreground(lipgloss.Color("8"))
-
-var gutterStyle = dimStyle
 
 func loadInput() []string {
 	info, _ := os.Stdin.Stat()
@@ -86,43 +75,6 @@ func initialModel(grepArgs []string) model {
 	return m
 }
 
-//	func (m *model) applyRegex(pattern string) {
-//		if pattern == "" {
-//			m.rendered = m.lines
-//			for i := range m.matches {
-//				m.matches[i] = false
-//			}
-//			m.matchCount = 0
-//			m.regexErr = nil
-//			return
-//		}
-//
-//		re, err := regexp.Compile(pattern)
-//		if err != nil {
-//			m.regexErr = err
-//			return
-//		}
-//
-//		m.matchCount = 0
-//		var out []string
-//
-//		for idx, line := range m.lines {
-//			if re.MatchString(line) {
-//				m.matches[idx] = true
-//				m.matchCount++
-//				highlighted := re.ReplaceAllStringFunc(line, func(s string) string {
-//					return matchStyle.Render(s)
-//				})
-//				out = append(out, highlighted)
-//			} else {
-//				m.matches[idx] = false
-//				out = append(out, dimStyle.Render(line))
-//			}
-//		}
-//
-//		m.rendered = out
-//		m.regexErr = nil
-//	}
 func (m *model) applyRegex(pattern string) {
 	matchMap, err := RunGrep(pattern, m.grepArgs, m.lines)
 	if err != nil {
@@ -202,67 +154,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	m.applyRegex(m.input.Value())
 
-	var content string
-
-	if !m.dualMode {
-		// ===== single column
-		var numbered []string
-		width := 1 + len(strconv.Itoa(len(m.lines)))
-
-		for i, line := range m.rendered {
-			gutter := fmt.Sprintf("%*d | ", width, i+1)
-			gutter = gutterStyle.Render(gutter)
-			numbered = append(numbered, gutter+" "+line)
-		}
-
-		content = strings.Join(numbered, "\n")
-
-	} else {
-		sep := " │ "
-		sepWidth := lipgloss.Width(sep)
-
-		// exact 50/50 columns
-		colWidth := (m.width - sepWidth) / 2
-
-		leftStyle := lipgloss.NewStyle().Width(colWidth)
-		rightStyle := lipgloss.NewStyle().Width(colWidth)
-
-		var left []string
-		var right []string
-
-		for i, line := range m.rendered {
-			if m.matches[i] {
-				right = append(right, rightStyle.Render(line))
-			} else {
-				left = append(left, leftStyle.Render(line))
-			}
-		}
-
-		max := len(left)
-		if len(right) > max {
-			max = len(right)
-		}
-
-		var rows []string
-
-		for i := 0; i < max; i++ {
-			l := strings.Repeat(" ", colWidth)
-			r := strings.Repeat(" ", colWidth)
-
-			if i < len(left) {
-				l = left[i]
-			}
-			if i < len(right) {
-				r = right[i]
-			}
-
-			rows = append(rows, l+sep+r)
-		}
-
-		content = strings.Join(rows, "\n")
-		m.view.SetContent(content)
-	}
-
+	content := renderContent(m)
 	m.view.SetContent(content)
 	return m, cmd
 }
@@ -313,7 +205,6 @@ func main() {
 	m.dualMode = parsedFlags.dualMode
 
 	p := tea.NewProgram(m, tea.WithAltScreen())
-
 	finalModel, err := p.Run()
 	if err != nil {
 		panic(err)
