@@ -24,7 +24,10 @@ type model struct {
 	height     int
 	matchCount int
 	regexErr   error
-	dualMode   bool
+
+	dualMode     bool
+	patternOut   bool
+	finalPattern string
 }
 
 func loadInput() []string {
@@ -119,6 +122,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "enter":
+			m.finalPattern = m.input.Value()
 			return m, tea.Quit
 		case "ctrl+c", "esc":
 			m.matches = nil // cancel any output
@@ -184,14 +188,29 @@ func splitArgs() ([]string, []string) {
 	return args, nil
 }
 
+func writeOutput(m model, f *flags) {
+	if f.patternOut {
+		fmt.Println(m.finalPattern)
+		return
+	}
+
+	for i, line := range m.lines {
+		if m.matches[i] {
+			fmt.Println(line)
+		}
+	}
+}
+
 type flags struct {
-	dualMode bool
+	dualMode   bool
+	patternOut bool
 }
 
 func parseFlags(vgrepFlags []string) *flags {
 	var result flags
 	fs := flag.NewFlagSet("vgrep", flag.ExitOnError)
 	fs.BoolVar(&result.dualMode, "d", false, "dual column mode (unmatched | matched)")
+	fs.BoolVar(&result.patternOut, "p", false, "output regexp instead of matches")
 
 	fs.Parse(vgrepFlags)
 	return &result
@@ -217,10 +236,5 @@ func main() {
 		return
 	}
 
-	fmt.Println()
-	for i, line := range result.lines {
-		if result.matches[i] {
-			fmt.Println(line)
-		}
-	}
+	writeOutput(result, parsedFlags)
 }
