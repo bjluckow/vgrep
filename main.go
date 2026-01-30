@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"io"
 	"os"
@@ -26,6 +27,7 @@ type model struct {
 	height     int
 	matchCount int
 	regexErr   error
+	dualMode   bool
 }
 
 var matchStyle = lipgloss.NewStyle().
@@ -177,17 +179,68 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	m.applyRegex(m.input.Value())
 
-	var numbered []string
-	width := 1 + len(strconv.Itoa(len(m.lines)))
-	for i, line := range m.rendered {
-		gutter := fmt.Sprintf("%*d | ", width, i+1)
-		gutter = gutterStyle.Render(gutter)
-		numbered = append(numbered, gutter+" "+line)
+	var content string
+
+	if !m.dualMode {
+		// ===== single column
+		var numbered []string
+		width := 1 + len(strconv.Itoa(len(m.lines)))
+
+		for i, line := range m.rendered {
+			gutter := fmt.Sprintf("%*d | ", width, i+1)
+			gutter = gutterStyle.Render(gutter)
+			numbered = append(numbered, gutter+" "+line)
+		}
+
+		content = strings.Join(numbered, "\n")
+
+	} else {
+		sep := " │ "
+		sepWidth := lipgloss.Width(sep)
+
+		// exact 50/50 columns
+		colWidth := (m.width - sepWidth) / 2
+
+		leftStyle := lipgloss.NewStyle().Width(colWidth)
+		rightStyle := lipgloss.NewStyle().Width(colWidth)
+
+		var left []string
+		var right []string
+
+		for i, line := range m.rendered {
+			if m.matches[i] {
+				right = append(right, rightStyle.Render(line))
+			} else {
+				left = append(left, leftStyle.Render(line))
+			}
+		}
+
+		max := len(left)
+		if len(right) > max {
+			max = len(right)
+		}
+
+		var rows []string
+
+		for i := 0; i < max; i++ {
+			l := strings.Repeat(" ", colWidth)
+			r := strings.Repeat(" ", colWidth)
+
+			if i < len(left) {
+				l = left[i]
+			}
+			if i < len(right) {
+				r = right[i]
+			}
+
+			rows = append(rows, l+sep+r)
+		}
+
+		content = strings.Join(rows, "\n")
+		m.view.SetContent(content)
 	}
 
-	content := strings.Join(numbered, "\n")
 	m.view.SetContent(content)
-
 	return m, cmd
 }
 
@@ -216,9 +269,26 @@ func splitArgs() ([]string, []string) {
 	return args, nil
 }
 
+type flags struct {
+	dualMode bool
+}
+
+func parseFlags(vgrepFlags []string) *flags {
+	var result flags
+	fs := flag.NewFlagSet("vgrep", flag.ExitOnError)
+	fs.BoolVar(&result.dualMode, "d", false, "dual column mode")
+
+	fs.Parse(vgrepFlags)
+	return &result
+}
+
 func main() {
-	_, grepArgs := splitArgs()
+	vgrepFlags, grepArgs := splitArgs()
+	parsedFlags := parseFlags(vgrepFlags)
+
 	m := initialModel(grepArgs)
+	m.dualMode = parsedFlags.dualMode
+
 	p := tea.NewProgram(m, tea.WithAltScreen())
 
 	finalModel, err := p.Run()
