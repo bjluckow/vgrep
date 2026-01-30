@@ -1,8 +1,6 @@
 # `vgrep`: Visual Global Regex Print
 
-Interactive visual grep in your terminal.
-
-Type a regex and watch matches update live. Press **Enter** to output matching lines, **Escape** to cancel.
+![demo](demo.png)
 
 ---
 
