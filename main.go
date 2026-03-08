@@ -220,10 +220,12 @@ func main() {
 	vgrepFlags, grepArgs := splitArgs()
 	parsedFlags := parseFlags(vgrepFlags)
 
+	initRenderer()
+
 	m := initialModel(grepArgs)
 	m.dualMode = parsedFlags.dualMode
 
-	p := tea.NewProgram(m, tea.WithAltScreen())
+	p := tea.NewProgram(m, tea.WithAltScreen(), tea.WithOutput(os.Stderr), tea.WithInputTTY())
 	finalModel, err := p.Run()
 	if err != nil {
 		panic(err)

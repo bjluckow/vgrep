@@ -2,20 +2,29 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
 )
 
-var matchStyle = lipgloss.NewStyle().
-	Background(lipgloss.Color("1")).
-	Foreground(lipgloss.Color("15"))
+var (
+	matchStyle  lipgloss.Style
+	dimStyle    lipgloss.Style
+	gutterStyle lipgloss.Style
+)
 
-var dimStyle = lipgloss.NewStyle().
-	Foreground(lipgloss.Color("8"))
+func initRenderer() {
+	lipgloss.SetDefaultRenderer(lipgloss.NewRenderer(os.Stderr))
 
-var gutterStyle = dimStyle
+	matchStyle = lipgloss.NewStyle().
+		Background(lipgloss.Color("1")).
+		Foreground(lipgloss.Color("15"))
+	dimStyle = lipgloss.NewStyle().
+		Foreground(lipgloss.Color("8"))
+	gutterStyle = dimStyle
+}
 
 func renderContent(m model) string {
 	if !m.dualMode {
