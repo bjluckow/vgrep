@@ -38,9 +38,13 @@ func renderSingle(m model) string {
 	width := 1 + len(strconv.Itoa(len(m.lines)))
 
 	for i, line := range m.rendered {
-		gutter := fmt.Sprintf("%*d | ", width, i+1)
-		gutter = gutterStyle.Render(gutter)
-		numbered = append(numbered, gutter+" "+line)
+		if m.showLineNums {
+
+			gutter := fmt.Sprintf("%*d | ", width, i+1)
+			gutter = gutterStyle.Render(gutter)
+			line = gutter + " " + line
+		}
+		numbered = append(numbered, line)
 	}
 
 	return strings.Join(numbered, "\n")
