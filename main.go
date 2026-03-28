@@ -2,12 +2,13 @@ package main
 
 import (
 	"bufio"
-	"flag"
+
 	"fmt"
 	"io"
 	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
+	flag "github.com/spf13/pflag"
 )
 
 func loadInput() []string {
@@ -69,9 +70,9 @@ type flags struct {
 func parseFlags(vgrepFlags []string) *flags {
 	var result flags
 	fs := flag.NewFlagSet("vgrep", flag.ExitOnError)
-	fs.BoolVar(&result.dualMode, "split", false, "dual column mode (unmatched | matched)")
-	fs.BoolVar(&result.patternOut, "expr-out", false, "output regexp instead of matches")
-	fs.BoolVar(&result.showLineNums, "line-nums", true, "display line numbers")
+	fs.BoolVarP(&result.dualMode, "compare", "c", false, "dual column mode (unmatched | matched)")
+	fs.BoolVarP(&result.patternOut, "expr", "e", false, "output regexp instead of matches")
+	fs.BoolVarP(&result.showLineNums, "lines", "l", true, "display line numbers")
 
 	fs.Parse(vgrepFlags)
 	return &result

@@ -1,7 +1,7 @@
 # `vgrep`: Visual Global Regex Print
 
 Test [regular expressions](https://en.wikipedia.org/wiki/Regular_expression) in real time. Powered by [grep](https://en.wikipedia.org/wiki/Grep).
-![demo](demo.png)
+![demo](docs/demo.png)
 
 ---
 
